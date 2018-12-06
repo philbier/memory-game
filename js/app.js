@@ -1,16 +1,16 @@
+//Create a list that holds all of your cards
+const cardNodes = document.querySelectorAll(".card");
+const deckNode = document.querySelector(".deck");
+
+let cardsArray = Array.prototype.slice.call(cardNodes);
+
 /* Main Controller that starts the game */
 (function mainController() {
-    
     restart();
-
 })();
 
 function restart() {
 
-    //Create a list that holds all of your cards
-    const cardNodes = document.querySelectorAll(".card");
-    let cardsArray = Array.prototype.slice.call(cardNodes);
-    
     //remove alle children
     for (const element of cardNodes) {
         element.remove();
@@ -19,8 +19,7 @@ function restart() {
     //shuffle cardsArray
     cardsArray = shuffle(cardsArray);
     
-    //Add nodes to document
-    const deckNode = document.querySelector(".deck");
+
     for (const element of cardsArray) {
         deckNode.appendChild(element);
     }
@@ -42,19 +41,49 @@ function shuffle(array) {
     return array;
 }
 
+//Event Listener for all "Click"-Card Events
+let cardsTurned = 0;
+let arrCurrentCardNodes = [];  
 
+deckNode.addEventListener('click', function(event) {
+    let currentNode = event.target;
+    
+    if (currentNode.nodeName === 'LI') {
+        //*TODO - is there a more elegant way of getting the specific node
+        arrCurrentCardNodes.push(currentNode.childNodes[1]);
+        event.target.classList.toggle('open');
+        event.target.classList.toggle('show');
+        cardsTurned += 1;
+    } 
 
+    if(cardsTurned == 2) {
+        checkMatching(arrCurrentCardNodes);
+        cardsTurned = 0;
+        arrCurrentCardNodes = []; 
+        increaseMoves();
+        decreaseStars();
+    }
 
-// (function modelController() {
+});
 
-// })();
+function checkMatching(arr) {
+    return (arr[0].classList.value != arr[1].classList.value ? resetTurn(arr) : false);
+}
 
-// (function uiController() {
+function resetTurn(arr) {
+    for (const element of arr) {
+        element.parentNode.classList.toggle('open');
+        element.parentNode.classList.toggle('show');
+    }
+}
 
-// })();
+function increaseMoves() {
 
+}
 
+function decreaseStars() {
 
+}
 
 
 /*
