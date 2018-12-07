@@ -1,6 +1,7 @@
 //Create a list that holds all of your cards
-const cardNodes = document.querySelectorAll(".card");
 const deckNode = document.querySelector(".deck");
+const cardNodes = document.querySelectorAll(".card");
+const restartNode = document.querySelector(".restart");
 
 let cardsArray = Array.prototype.slice.call(cardNodes);
 
@@ -11,7 +12,7 @@ let cardsArray = Array.prototype.slice.call(cardNodes);
 
 function restart() {
 
-    //remove alle children
+    //remove all children
     for (const element of cardNodes) {
         element.remove();
     };
@@ -24,6 +25,14 @@ function restart() {
         deckNode.appendChild(element);
     }
 
+    turnAllCardsFaceDown(cardsArray);
+
+}
+
+function turnAllCardsFaceDown(arr) {
+    for (const element of arr) {
+        element.className = 'card';
+    }
 }
 
 // Shuffle function from http://stackoverflow.com/a/2450976
@@ -85,6 +94,9 @@ function decreaseStars() {
 
 }
 
+restartNode.addEventListener('click', function() {
+    restart();
+});
 
 /*
  * set up the event listener for a card. If a card is clicked:
