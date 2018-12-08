@@ -2,6 +2,12 @@
 const deckNode = document.querySelector(".deck");
 const cardNodes = document.querySelectorAll(".card");
 const restartNode = document.querySelector(".restart");
+const movesNode = document.querySelector(".moves");
+const starsNode = document.querySelector(".stars");
+
+const winThreshold = 8;
+let correctCombinations = 0;
+let falseGuesses = 0;
 
 let cardsArray = Array.prototype.slice.call(cardNodes);
 
@@ -20,13 +26,16 @@ function restart() {
     //shuffle cardsArray
     cardsArray = shuffle(cardsArray);
     
-
+    //place shuffled cards on deck
     for (const element of cardsArray) {
         deckNode.appendChild(element);
     }
 
+    //ensure that all cards are face down
     turnAllCardsFaceDown(cardsArray);
 
+    //reset move-counter
+    movesNode.textContent = 0;
 }
 
 function turnAllCardsFaceDown(arr) {
@@ -52,51 +61,84 @@ function shuffle(array) {
 
 //Event Listener for all "Click"-Card Events
 let cardsTurned = 0;
-let arrCurrentCardNodes = [];  
+let arrCurrentCardNodes = []; 
+let clickDisabeld = false; 
 
 deckNode.addEventListener('click', function(event) {
-    let currentNode = event.target;
+    if(!clickDisabeld) {
+        let currentNode = event.target;
+        if (currentNode.nodeName === 'LI') {
+            //*TODO - is there a more elegant way of getting the specific node
+            arrCurrentCardNodes.push(currentNode.childNodes[1]);
+            event.target.classList.toggle('open');
+            event.target.classList.toggle('show');
+            cardsTurned += 1;
+        } 
     
-    if (currentNode.nodeName === 'LI') {
-        //*TODO - is there a more elegant way of getting the specific node
-        arrCurrentCardNodes.push(currentNode.childNodes[1]);
-        event.target.classList.toggle('open');
-        event.target.classList.toggle('show');
-        cardsTurned += 1;
-    } 
+        if(cardsTurned == 2) {
+            //check wether card combination is valid
+            checkMatching(arrCurrentCardNodes);
 
-    if(cardsTurned == 2) {
-        checkMatching(arrCurrentCardNodes);
-        cardsTurned = 0;
-        arrCurrentCardNodes = []; 
-        increaseMoves();
-        decreaseStars();
+            //reset turn
+            cardsTurned = 0;
+            arrCurrentCardNodes = [];
+
+            increaseMoves();
+            decreaseStars();
+
+            checkGameWin();
+        }
     }
-
 });
 
 function checkMatching(arr) {
-    return (arr[0].classList.value != arr[1].classList.value ? resetTurn(arr) : false);
+    return (arr[0].classList.value != arr[1].classList.value ? resetTurn(arr) : correctCombinations += 1);
 }
 
 function resetTurn(arr) {
-    for (const element of arr) {
-        element.parentNode.classList.toggle('open');
-        element.parentNode.classList.toggle('show');
-    }
+    //delay next user interaction
+    clickDisabeld = true;
+
+    setTimeout(function () { 
+        for (const element of arr) {
+            element.parentNode.classList.toggle('open');
+            element.parentNode.classList.toggle('show');
+        }
+        clickDisabeld = false;
+    }, 1500);
+
+    //increase false moves
+    falseGuesses += 1;
 }
 
 function increaseMoves() {
-
+    movesNode.textContent = parseInt(movesNode.textContent) + 1;
 }
 
 function decreaseStars() {
+    let arrStarNodes  = Array.prototype.slice.call(starsNode.childNodes).filter(function(element){
+        return element.nodeName === 'LI';
+    });
+    
+    //TODO logic has to be that every wrong move, half a star gets subtracted
+    
+    arrStarNodes[arrStarNodes.length-1].firstChild.classList.toggle("fa-star");
+    // arrStarNodes[arrStarNodes.length-1].firstChild.classList.toggle("fa-star-o");
+    arrStarNodes[arrStarNodes.length-1].firstChild.classList.toggle("fa-star-half-empty");
 
+}
+
+function checkGameWin() {
+    return correctCombinations == winThreshold ? showWinningPannel() : false;
 }
 
 restartNode.addEventListener('click', function() {
     restart();
 });
+
+function showWinningPannel() {
+    alert(" You Win!! ");
+}
 
 /*
  * set up the event listener for a card. If a card is clicked:
