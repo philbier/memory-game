@@ -6,9 +6,9 @@ const movesNode = document.querySelector(".moves");
 const starsNode = document.querySelector(".stars");
 
 const winThreshold = 8;
-let correctCombinations = 0;
-let falseGuesses = 0;
+let correctCombinations, remainGuesses;
 
+//use map-function?
 let cardsArray = Array.prototype.slice.call(cardNodes);
 
 /* Main Controller that starts the game */
@@ -36,6 +36,8 @@ function restart() {
 
     //reset move-counter
     movesNode.textContent = 0;
+    correctCombinations = 0;
+    remainGuesses = 6;
 }
 
 function turnAllCardsFaceDown(arr) {
@@ -85,7 +87,6 @@ deckNode.addEventListener('click', function(event) {
 
             increaseMoves();
             decreaseStars();
-
             checkGameWin();
         }
     }
@@ -108,7 +109,7 @@ function resetTurn(arr) {
     }, 1500);
 
     //increase false moves
-    falseGuesses += 1;
+    remainGuesses -= 1;
 }
 
 function increaseMoves() {
@@ -121,10 +122,27 @@ function decreaseStars() {
     });
     
     //TODO logic has to be that every wrong move, half a star gets subtracted
+    if(remainGuesses > 0) {
+
+        let tmp = remainGuesses/2;
+
+        alert(parseInt(remainGuesses/2));
+        if(remainGuesses % 0){
+            arrStarNodes[tmp].firstChild.classList.toggle("fa-star");
+            arrStarNodes[tmp].firstChild.classList.toggle("fa-star-o");
+        } else {
+            arrStarNodes[tmp].firstChild.classList.toggle("fa-star");
+            arrStarNodes[tmp].firstChild.classList.toggle("fa-star-half-empty");
+        }
+
+    } else {
+        alert("you lose! hahahah");
+    }
     
-    arrStarNodes[arrStarNodes.length-1].firstChild.classList.toggle("fa-star");
+
+    
     // arrStarNodes[arrStarNodes.length-1].firstChild.classList.toggle("fa-star-o");
-    arrStarNodes[arrStarNodes.length-1].firstChild.classList.toggle("fa-star-half-empty");
+    
 
 }
 
