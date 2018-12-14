@@ -1,4 +1,12 @@
-//Create a list that holds all of your cards
+//Game Statistics
+const gameVariables = {
+    winThreshold: 8
+}
+
+//object that stores helper variables used for each turn the player makes
+const moveVariables = {}
+
+//document objects
 const deckNode = document.querySelector(".deck");
 const cardNodes = document.querySelectorAll(".card");
 const restartNode = document.querySelector(".restart");
@@ -8,67 +16,44 @@ const winningPanel = document.getElementById("winningScreen");
 const btnPlayAgain = document.getElementById("btnPlay");
 const winningText = document.getElementById("winningText");
 const winningTime = document.getElementById("winningTime");
-const startDate = new Date();
 
-const winThreshold = 8;
-let correctCombinations, remainGuesses;
+//using spread-operator to put nodelists into an array;
+let cardsArray = [...cardNodes]; 
+let starsArray = [...starsNode.childNodes].filter( (element) => element.nodeName === 'LI');
 
-//use map-function?
-let cardsArray = Array.prototype.slice.call(cardNodes);
-let starsArray  = Array.prototype.slice.call(starsNode.childNodes).filter(function(element){
-    return element.nodeName === 'LI';
-});
-
-let cardsTurned = 0;
-let arrCurrentCardNodes = []; 
-let clickDisabeld = false; 
-
-/* Main Controller that starts the game */
-(function mainController() {
-    restart();
-})();
-
-function restart() {
-
-    //remove all children
-    for (const element of cardNodes) {
-        element.remove();
-    };
-
+/* IIFE that (re)starts the game */
+(restart = () => {
     //shuffle cardsArray
     cardsArray = shuffle(cardsArray);
     
-    //place shuffled cards on deck
+    //shuffle card and put them on the deck
+    //if an element already exists in the DOM the .appendChild() method will move it rather than duplicating it
     for (const element of cardsArray) {
         deckNode.appendChild(element);
+        element.className = 'card';
     }
 
-    //reset stars
+    //reset stars in scoring panel
     for (const element of starsArray) {
         element.firstChild.classList = 'fa fa-star';
     } 
+ 
+    //reset game statistics
+    gameVariables.correctCombinations = 0;  //
+    gameVariables.remainGuesses = 6;        //
+    gameVariables.startDate = new Date();   //
 
-    //ensure that all cards are face down
-    turnAllCardsFaceDown(cardsArray);
+    //helper variables used for each turn the player makes
+    moveVariables.currentCards = [];        //
+    moveVariables.clickDisabled = false;    //
 
-    //reset counter variables
-    movesNode.textContent = 0;
-    correctCombinations = 0;
-    remainGuesses = 6;
-    clickDisabeld = false;
-    winningPanel.style.display = 'none';
-}
-
-function turnAllCardsFaceDown(arr) {
-    for (const element of arr) {
-        element.className = 'card';
-    }
-}
+    movesNode.textContent = 0;              //reset moves counter in scoring panel
+    winningPanel.style.display = 'none';    //hide winningPanel
+})();
 
 // Shuffle function from http://stackoverflow.com/a/2450976
 function shuffle(array) {
     var currentIndex = array.length, temporaryValue, randomIndex;
-
     while (currentIndex !== 0) {
         randomIndex = Math.floor(Math.random() * currentIndex);
         currentIndex -= 1;
@@ -76,43 +61,39 @@ function shuffle(array) {
         array[currentIndex] = array[randomIndex];
         array[randomIndex] = temporaryValue;
     }
-
     return array;
 }
 
 //Event Listener for all "Click"-Card Events
 deckNode.addEventListener('click', function(event) {
-    if(!clickDisabeld) {
-        let currentCard;
-        currentCard = event.target;
-
-        switch(arrCurrentCardNodes.length) {
+    if(!moveVariables.clickDisabled) {
+        switch(moveVariables.currentCards.length) {
             case 0:
-                isRelevantCardElement(currentCard) ? turnCardFaceUp(currentCard) : false; 
+                isRelevantCardElement(event.target) ? turnCardFaceUp(event.target) : false; 
                 break;
             case 1:
-                isRelevantCardElement(currentCard) && isSameAsPreviousCard(currentCard) ? turnCardFaceUp(currentCard) : false; 
+                isRelevantCardElement(event.target) && isSameAsPreviousCard(event.target) ? turnCardFaceUp(event.target) : false; 
         }
-
-        if(arrCurrentCardNodes.length==2){
+        
+        if(moveVariables.currentCards.length==2){
             increaseMoves();
             checkMatching();
             checkGameWin();
 
             //reset turn
-            arrCurrentCardNodes = [];
+            moveVariables.currentCards = [];
         }
     }
 });
 
 let isSameAsPreviousCard = cardNode => {
-    return  cardNode.compareDocumentPosition(arrCurrentCardNodes[0]) != 20 
+    return cardNode.compareDocumentPosition(moveVariables.currentCards[0]) != 20 
 }
 
 let turnCardFaceUp = (cardNode) => {
     cardNode.classList.toggle('open');
     cardNode.classList.toggle('show');
-    arrCurrentCardNodes.push(cardNode.childNodes[1]);
+    moveVariables.currentCards.push(cardNode.childNodes[1]);
 }
 
 //checks wether this node is an LI-Element and...
@@ -121,13 +102,14 @@ let isRelevantCardElement = (cardNode) => {
     return cardNode.nodeName === 'LI' && !(cardNode.classList.contains('match'));
 }
 
-function checkMatching(arr) {
-    return (arrCurrentCardNodes[0].classList.value != arrCurrentCardNodes[1].classList.value ? resetTurn(arrCurrentCardNodes) : correctGuess(arrCurrentCardNodes));
+function checkMatching() {
+    let arr = moveVariables.currentCards;
+    return (arr[0].classList.value != arr[1].classList.value ? resetTurn(arr) : correctGuess(arr));
 }
 
 function resetTurn(arr) {
-    clickDisabeld = true; //delay next user interaction until cards are face down again
-    remainGuesses -= 1;
+    clickDisabled = true; //delay next user interaction until cards are face down again
+    gameVariables.remainGuesses -= 1;
 
     for (const element of arr) {
         element.parentNode.classList.toggle('no-match');
@@ -140,13 +122,13 @@ function resetTurn(arr) {
                 element.parentNode.classList.toggle('show');
                 element.parentNode.classList.toggle('no-match');
             }
-            clickDisabeld = false;
+            clickDisabled = false;
         }, 800);
     }
 }
 
 function correctGuess(arr) {
-    correctCombinations += 1;
+    gameVariables.correctCombinations += 1;
 
     for (const element of arr) {
         element.parentNode.classList.toggle('match');
@@ -159,11 +141,11 @@ function increaseMoves() {
 
 function decreaseStars() {
     //logic has to be that every wrong move, half a star gets subtracted
-    if(remainGuesses > 0) {
+    if(gameVariables.remainGuesses > 0) {
 
-        let tmp = parseInt(remainGuesses/2);
+        let tmp = parseInt(gameVariables.remainGuesses/2);
        
-        if(remainGuesses % 2 != 0){
+        if(gameVariables.remainGuesses % 2 != 0){
             starsArray[tmp].firstChild.classList.remove("fa-star");
             starsArray[tmp].firstChild.classList.toggle("fa-star-half-empty");
 
@@ -181,7 +163,7 @@ function decreaseStars() {
 }
 
 function checkGameWin() {
-    return correctCombinations == winThreshold ? showWinningPannel() : false;
+    return gameVariables.correctCombinations == gameVariables.winThreshold ? showWinningPannel() : false;
 }
 
 restartNode.addEventListener('click', function() {
@@ -192,8 +174,8 @@ btnPlayAgain.onclick = restart;
 
 function showWinningPannel() {
     winningPanel.style.display = 'flex';
-    winningText.textContent = `You have won with ${movesNode.textContent} moves and ${remainGuesses/2} stars. Awesome!`
-    winningTime.textContent = getPlayTime(startDate, new Date());
+    winningText.textContent = `You have won with ${movesNode.textContent} moves and ${gameVariables.remainGuesses/2} stars. Awesome!`
+    winningTime.textContent = getPlayTime(gameVariables.startDate, new Date());
 }
 
 function getPlayTime(startDate,endDate) {
