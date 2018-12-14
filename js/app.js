@@ -4,6 +4,12 @@ const cardNodes = document.querySelectorAll(".card");
 const restartNode = document.querySelector(".restart");
 const movesNode = document.querySelector(".moves");
 const starsNode = document.querySelector(".stars");
+const showButton = document.getElementById("show_button");
+const winningPanel = document.getElementById("winningScreen");
+const btnPlayAgain = document.getElementById("btnPlay");
+const winningText = document.getElementById("winningText");
+const winningTime = document.getElementById("winningTime");
+const startDate = new Date();
 
 const winThreshold = 8;
 let correctCombinations, remainGuesses;
@@ -51,6 +57,7 @@ function restart() {
     correctCombinations = 0;
     remainGuesses = 6;
     clickDisabeld = false;
+    winningPanel.style.display = 'none';
 }
 
 function turnAllCardsFaceDown(arr) {
@@ -170,10 +177,24 @@ restartNode.addEventListener('click', function() {
     restart();
 });
 
+btnPlayAgain.onclick = restart;
+
+showButton.onclick = function() {
+    showWinningPannel(); 
+};
+
 function showWinningPannel() {
-    alert(" You Win!! ");
+    winningPanel.style.display = 'flex';
+    winningText.textContent = `You have won with ${movesNode.textContent} moves and ${remainGuesses/2} stars. Awesome!`
+    winningTime.textContent = getPlayTime(startDate, new Date());
 }
 
+function getPlayTime(startDate,endDate) {
+    let totalSec = Math.round((endDate.getTime() - startDate.getTime())/1000,0);
+    let minutes = parseInt(totalSec/60);
+    let seconds = totalSec % 60;
+    return `Playing time: ${minutes}min ${seconds}sec`
+}
 /*
  * set up the event listener for a card. If a card is clicked:
  *  - display the card's symbol (put this functionality in another function that you call from this one)
