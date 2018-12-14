@@ -4,7 +4,6 @@ const cardNodes = document.querySelectorAll(".card");
 const restartNode = document.querySelector(".restart");
 const movesNode = document.querySelector(".moves");
 const starsNode = document.querySelector(".stars");
-const showButton = document.getElementById("show_button");
 const winningPanel = document.getElementById("winningScreen");
 const btnPlayAgain = document.getElementById("btnPlay");
 const winningText = document.getElementById("winningText");
@@ -82,36 +81,48 @@ function shuffle(array) {
 }
 
 //Event Listener for all "Click"-Card Events
-
-
 deckNode.addEventListener('click', function(event) {
     if(!clickDisabeld) {
-        let currentNode = event.target;
-        if (currentNode.nodeName === 'LI' && !(currentNode.classList.contains('match'))) {
-            //*TODO - is there a more elegant way of getting the specific node
-            arrCurrentCardNodes.push(currentNode.childNodes[1]);
-            event.target.classList.toggle('open');
-            event.target.classList.toggle('show');
-            cardsTurned += 1;
-        } 
-    
-        if(cardsTurned == 2) {
-            increaseMoves();
+        let currentCard;
+        currentCard = event.target;
 
-            //check wether card combination is valid
-            checkMatching(arrCurrentCardNodes);
+        switch(arrCurrentCardNodes.length) {
+            case 0:
+                isRelevantCardElement(currentCard) ? turnCardFaceUp(currentCard) : false; 
+                break;
+            case 1:
+                isRelevantCardElement(currentCard) && isSameAsPreviousCard(currentCard) ? turnCardFaceUp(currentCard) : false; 
+        }
+
+        if(arrCurrentCardNodes.length==2){
+            increaseMoves();
+            checkMatching();
+            checkGameWin();
 
             //reset turn
-            cardsTurned = 0;
             arrCurrentCardNodes = [];
-
-            checkGameWin();
         }
     }
 });
 
+let isSameAsPreviousCard = cardNode => {
+    return  cardNode.compareDocumentPosition(arrCurrentCardNodes[0]) != 20 
+}
+
+let turnCardFaceUp = (cardNode) => {
+    cardNode.classList.toggle('open');
+    cardNode.classList.toggle('show');
+    arrCurrentCardNodes.push(cardNode.childNodes[1]);
+}
+
+//checks wether this node is an LI-Element and...
+//does not belong to an already found correct combination
+let isRelevantCardElement = (cardNode) => {
+    return cardNode.nodeName === 'LI' && !(cardNode.classList.contains('match'));
+}
+
 function checkMatching(arr) {
-    return (arr[0].classList.value != arr[1].classList.value ? resetTurn(arr) : correctGuess(arr));
+    return (arrCurrentCardNodes[0].classList.value != arrCurrentCardNodes[1].classList.value ? resetTurn(arrCurrentCardNodes) : correctGuess(arrCurrentCardNodes));
 }
 
 function resetTurn(arr) {
@@ -179,10 +190,6 @@ restartNode.addEventListener('click', function() {
 
 btnPlayAgain.onclick = restart;
 
-showButton.onclick = function() {
-    showWinningPannel(); 
-};
-
 function showWinningPannel() {
     winningPanel.style.display = 'flex';
     winningText.textContent = `You have won with ${movesNode.textContent} moves and ${remainGuesses/2} stars. Awesome!`
@@ -195,13 +202,3 @@ function getPlayTime(startDate,endDate) {
     let seconds = totalSec % 60;
     return `Playing time: ${minutes}min ${seconds}sec`
 }
-/*
- * set up the event listener for a card. If a card is clicked:
- *  - display the card's symbol (put this functionality in another function that you call from this one)
- *  - add the card to a *list* of "open" cards (put this functionality in another function that you call from this one)
- *  - if the list already has another card, check to see if the two cards match
- *    + if the cards do match, lock the cards in the open position (put this functionality in another function that you call from this one)
- *    + if the cards do not match, remove the cards from the list and hide the card's symbol (put this functionality in another function that you call from this one)
- *    + increment the move counter and display it on the page (put this functionality in another function that you call from this one)
- *    + if all cards have matched, display a message with the final score (put this functionality in another function that you call from this one)
- */
