@@ -120,7 +120,7 @@ h1 {
  * Styles for the Winning Screen
  */
 
-#winningScreen {
+#endScreen {
     position:absolute;
     background:#fff;
     opacity:.9;

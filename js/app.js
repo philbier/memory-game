@@ -12,17 +12,20 @@ const cardNodes = document.querySelectorAll(".card");
 const restartNode = document.querySelector(".restart");
 const movesNode = document.querySelector(".moves");
 const starsNode = document.querySelector(".stars");
-const winningPanel = document.getElementById("winningScreen");
+const endHeading = document.getElementById("endHeading")
+const endPanel = document.getElementById("endScreen");
 const btnPlayAgain = document.getElementById("btnPlay");
-const winningText = document.getElementById("winningText");
-const winningTime = document.getElementById("winningTime");
+const endText = document.getElementById("endText");
+const endTime = document.getElementById("endTime");
 
 //using spread-operator to put nodelists into an array;
 let cardsArray = [...cardNodes]; 
 let starsArray = [...starsNode.childNodes].filter( (element) => element.nodeName === 'LI');
 
+restart();
+
 /* IIFE that (re)starts the game */
-(restart = () => {
+function restart(){
     //shuffle cardsArray
     cardsArray = shuffle(cardsArray);
     
@@ -39,17 +42,18 @@ let starsArray = [...starsNode.childNodes].filter( (element) => element.nodeName
     } 
  
     //reset game statistics
-    gameVariables.correctCombinations = 0;  //
-    gameVariables.remainGuesses = 6;        //
-    gameVariables.startDate = new Date();   //
+    gameVariables.correctCombinations = 0;  //add property for correct guesses and set it to 0 
+    gameVariables.remainGuesses = 6;        //add property for remaining guesses and set it to 0
+    gameVariables.startDate = new Date();   //add property for starting date/time and set it to "now"
 
     //helper variables used for each turn the player makes
-    moveVariables.currentCards = [];        //
-    moveVariables.clickDisabled = false;    //
+    moveVariables.currentCards = [];        //add property for current cards per move as and empty array
+    moveVariables.clickDisabled = false;    //enable the possibility to click cards
 
+    //reset UI 
     movesNode.textContent = 0;              //reset moves counter in scoring panel
-    winningPanel.style.display = 'none';    //hide winningPanel
-})();
+    endPanel.style.display = 'none';    //hide winningPanel
+};
 
 // Shuffle function from http://stackoverflow.com/a/2450976
 function shuffle(array) {
@@ -73,43 +77,48 @@ deckNode.addEventListener('click', function(event) {
                 break;
             case 1:
                 isRelevantCardElement(event.target) && isSameAsPreviousCard(event.target) ? turnCardFaceUp(event.target) : false; 
-        }
-        
-        if(moveVariables.currentCards.length==2){
-            increaseMoves();
-            checkMatching();
-            checkGameWin();
 
-            //reset turn
-            moveVariables.currentCards = [];
+                if(moveVariables.currentCards.length==2){
+                    increaseMoves();
+                    checkMatching();
+                    checkGameWin();
+        
+                    //reset turn
+                    moveVariables.currentCards = [];
+                }
         }
     }
 });
 
+//compares the current card and the one that was selected before during one turn...
+//...returns true if both are exactly the same elements.
 let isSameAsPreviousCard = cardNode => {
     return cardNode.compareDocumentPosition(moveVariables.currentCards[0]) != 20 
 }
 
-let turnCardFaceUp = (cardNode) => {
+let turnCardFaceUp = cardNode => {
     cardNode.classList.toggle('open');
     cardNode.classList.toggle('show');
     moveVariables.currentCards.push(cardNode.childNodes[1]);
 }
 
 //checks wether this node is an LI-Element and...
-//does not belong to an already found correct combination
-let isRelevantCardElement = (cardNode) => {
+//...does not belong to an already found correct combination
+let isRelevantCardElement = cardNode => {
     return cardNode.nodeName === 'LI' && !(cardNode.classList.contains('match'));
 }
 
-function checkMatching() {
+//checks whether both cards in "currentCards"-Array are matching
+let checkMatching = () => {
     let arr = moveVariables.currentCards;
     return (arr[0].classList.value != arr[1].classList.value ? resetTurn(arr) : correctGuess(arr));
 }
 
+//indicates that both selected cards are not matching...
+//...and then turns them face down again
 function resetTurn(arr) {
-    clickDisabled = true; //delay next user interaction until cards are face down again
-    gameVariables.remainGuesses -= 1;
+    clickDisabled = true;               //delay next user interaction until cards are face down again
+    gameVariables.remainGuesses -= 1;   //a wrong move decreases the remainingGuesses
 
     for (const element of arr) {
         element.parentNode.classList.toggle('no-match');
@@ -127,6 +136,7 @@ function resetTurn(arr) {
     }
 }
 
+//indicates that both selected cards are a match
 function correctGuess(arr) {
     gameVariables.correctCombinations += 1;
 
@@ -135,12 +145,13 @@ function correctGuess(arr) {
     }
 }
 
+//increases the move counter in the UI
 function increaseMoves() {
     movesNode.textContent = parseInt(movesNode.textContent) + 1;
 }
 
+//for every wrong move this script gets executed and half a star gets subtracted
 function decreaseStars() {
-    //logic has to be that every wrong move, half a star gets subtracted
     if(gameVariables.remainGuesses > 0) {
 
         let tmp = parseInt(gameVariables.remainGuesses/2);
@@ -156,28 +167,34 @@ function decreaseStars() {
 
         return true;
     } else {
-        restart();
-        alert("You lost!");
+        showEndPanel("What a bummer!", "lost");
         return false;
     }
 }
 
+//the game is won if all 8 (winThreshold) combinations are found
 function checkGameWin() {
-    return gameVariables.correctCombinations == gameVariables.winThreshold ? showWinningPannel() : false;
+    return gameVariables.correctCombinations == gameVariables.winThreshold ? showEndPanel("Congratulations!", "won") : false;
 }
 
+//event listener for the restart button at the top
 restartNode.addEventListener('click', function() {
     restart();
 });
 
-btnPlayAgain.onclick = restart;
-
-function showWinningPannel() {
-    winningPanel.style.display = 'flex';
-    winningText.textContent = `You have won with ${movesNode.textContent} moves and ${gameVariables.remainGuesses/2} stars. Awesome!`
-    winningTime.textContent = getPlayTime(gameVariables.startDate, new Date());
+//shows a winning panel with game statistics like, number of moves, number of remaining guesses...
+//...and how many stars are left
+function showEndPanel(heading, result) {
+    endPanel.style.display = 'flex';
+    endHeading.textContent = `${heading}`;
+    endText.textContent = `You have ${result} with ${movesNode.textContent} moves and ${gameVariables.remainGuesses/2} stars!`
+    endTime.textContent = getPlayTime(gameVariables.startDate, new Date());
 }
 
+//assign restart event for winning/losing panel
+btnPlayAgain.onclick = restart;
+
+//get playing time formatted in minutes and seconds
 function getPlayTime(startDate,endDate) {
     let totalSec = Math.round((endDate.getTime() - startDate.getTime())/1000,0);
     let minutes = parseInt(totalSec/60);
