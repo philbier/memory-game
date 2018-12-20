@@ -17,6 +17,7 @@ const endPanel = document.getElementById("endScreen");
 const btnPlayAgain = document.getElementById("btnPlay");
 const endText = document.getElementById("endText");
 const endTime = document.getElementById("endTime");
+const timer = document.getElementById("timer");
 
 //using spread-operator to put nodelists into an array;
 let cardsArray = [...cardNodes]; 
@@ -42,16 +43,17 @@ function restart(){
     } 
  
     //reset game statistics
-    gameVariables.correctCombinations = 0;  //add property for correct guesses and set it to 0 
-    gameVariables.remainGuesses = 6;        //add property for remaining guesses and set it to 0
-    gameVariables.startDate = new Date();   //add property for starting date/time and set it to "now"
+    gameVariables.correctCombinations = 0;                                          //add property for correct guesses and set it to 0 
+    gameVariables.remainGuesses = 12;                                               //add property for remaining guesses and set it to 0
+    gameVariables.startDate = new Date();                                           //add property for starting date/time and set it to "now"
+    gameVariables.decreaseFactor = starsArray.length/gameVariables.remainGuesses;   //decrease factor for the stars scoring panel
 
     //helper variables used for each turn the player makes
     moveVariables.currentCards = [];        //add property for current cards per move as and empty array
     moveVariables.clickDisabled = false;    //enable the possibility to click cards
 
     //reset UI 
-    movesNode.textContent = 0;              //reset moves counter in scoring panel
+    movesNode.textContent = "0 Moves";  //reset moves counter in scoring panel
     endPanel.style.display = 'none';    //hide winningPanel
 };
 
@@ -147,22 +149,21 @@ function correctGuess(arr) {
 
 //increases the move counter in the UI
 function increaseMoves() {
-    movesNode.textContent = parseInt(movesNode.textContent) + 1;
+    let arrMoves= movesNode.textContent.split(" ")
+    movesNode.textContent = (parseInt(arrMoves[0]) + 1) + " Moves";
 }
 
+let starIndex =  starsArray.length;
 //for every wrong move this script gets executed and half a star gets subtracted
 function decreaseStars() {
+
+    starIndex -= gameVariables.decreaseFactor;
     if(gameVariables.remainGuesses > 0) {
+               
+        if(starIndex % 1 === 0) {
 
-        let tmp = parseInt(gameVariables.remainGuesses/2);
-       
-        if(gameVariables.remainGuesses % 2 != 0){
-            starsArray[tmp].firstChild.classList.remove("fa-star");
-            starsArray[tmp].firstChild.classList.toggle("fa-star-half-empty");
-
-        } else {
-            starsArray[tmp].firstChild.classList.remove("fa-star-half-empty");
-            starsArray[tmp].firstChild.classList.toggle("fa-star-o");
+            starsArray[starIndex].firstChild.classList.remove("fa-star");
+            starsArray[starIndex].firstChild.classList.add("fa-star-o");
         }
 
         return true;
@@ -187,7 +188,7 @@ restartNode.addEventListener('click', function() {
 function showEndPanel(heading, result) {
     endPanel.style.display = 'flex';
     endHeading.textContent = `${heading}`;
-    endText.textContent = `You have ${result} with ${movesNode.textContent} moves and ${gameVariables.remainGuesses/2} stars!`
+    endText.textContent = `You have ${result} with ${movesNode.textContent} moves and ${starIndex} stars!`
     endTime.textContent = getPlayTime(gameVariables.startDate, new Date());
 }
 
@@ -201,3 +202,7 @@ function getPlayTime(startDate,endDate) {
     let seconds = totalSec % 60;
     return `Playing time: ${minutes}min ${seconds}sec`
 }
+
+setInterval(() => {
+    timer.textContent = getPlayTime(gameVariables.startDate, new Date());
+},1000);

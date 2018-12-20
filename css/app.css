@@ -94,12 +94,15 @@ h1 {
  */
 
 .score-panel {
+    display: flex;
+    justify-content: space-between;
     text-align: left;
-    width: 345px;
+    width: 600px;
     margin-bottom: 10px;
 }
 
-.score-panel .stars {
+.score-panel .stars,
+#timer {
     margin: 0;
     padding: 0;
     display: inline-block;
