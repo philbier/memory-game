@@ -22,6 +22,7 @@ const timer = document.getElementById("timer");
 //using spread-operator to put nodelists into an array;
 let cardsArray = [...cardNodes]; 
 let starsArray = [...starsNode.childNodes].filter( (element) => element.nodeName === 'LI');
+let starIndex;
 
 restart();
 
@@ -47,6 +48,8 @@ function restart(){
     gameVariables.remainGuesses = 12;                                               //add property for remaining guesses and set it to 0
     gameVariables.startDate = new Date();                                           //add property for starting date/time and set it to "now"
     gameVariables.decreaseFactor = starsArray.length/gameVariables.remainGuesses;   //decrease factor for the stars scoring panel
+    starIndex =  starsArray.length;
+
 
     //helper variables used for each turn the player makes
     moveVariables.currentCards = [];        //add property for current cards per move as and empty array
@@ -153,7 +156,7 @@ function increaseMoves() {
     movesNode.textContent = (parseInt(arrMoves[0]) + 1) + " Moves";
 }
 
-let starIndex =  starsArray.length;
+
 //for every wrong move this script gets executed and half a star gets subtracted
 function decreaseStars() {
 
